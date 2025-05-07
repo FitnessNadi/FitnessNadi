@@ -31,7 +31,7 @@ def analysiere_ernaehrung(text):
 
 # Initialwerte
 if "vitamine" not in st.session_state:
-    st.session_state.vitamine = ["Magnesium", "Vitamin D", "Omega 3"]
+    st.session_state.vitamine = ["Magnesium", "Vitamin D", "Omega 3", "Vitamin B12", "Jod"]
 if "zyklus_start" not in st.session_state:
     st.session_state.zyklus_start = datetime.date.today()
 if "zyklus_länge" not in st.session_state:
