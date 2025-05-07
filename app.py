@@ -4,48 +4,88 @@ import datetime
 import os
 
 st.set_page_config(layout="wide")
-st.title("Vegane Gesundheits- & Nährstoff-Analyse-App")
+st.title("Gesundheits- & Planungs-App mit Speicherung und eindeutigen Keys")
 
-# Daten laden
-nutri_df = pd.read_csv("vegan_naehrstoffe.csv")
+DATA_FILE = "tagebuch.csv"
 
-# Tagesplan-Eingabe
-st.header("Heutige Mahlzeiten")
-essen = st.text_area("Was hast du heute gegessen? (z. B. Haferflocken, Linsen, Spinat)")
+if "vitamine" not in st.session_state:
+    st.session_state.vitamine = ["Magnesium", "Vitamin D", "Omega 3", "B12"]
+if "zyklus_start" not in st.session_state:
+    st.session_state.zyklus_start = datetime.date.today()
+if "zyklus_länge" not in st.session_state:
+    st.session_state.zyklus_länge = 28
 
-# Einfache Analyse basierend auf bekannten Lebensmitteln
-def analysiere_naehrstoffe(text):
-    text = text.lower()
-    result = {n: 0 for n in ["Eisen_mg", "Magnesium_mg", "Kalzium_mg", "Zink_mg", "Protein_g"]}
-    lebensmittel_erkannt = []
-    for i, row in nutri_df.iterrows():
-        if row["Lebensmittel"].lower() in text:
-            lebensmittel_erkannt.append(row["Lebensmittel"])
-            for n in result:
-                result[n] += row[n]
-    return result, lebensmittel_erkannt
+def get_zyklusphase(datum, start, länge):
+    tage_seit_start = (datum - start).days % länge
+    if tage_seit_start < 5:
+        return "Periode"
+    elif 5 <= tage_seit_start < 13:
+        return "Follikelphase"
+    elif 13 <= tage_seit_start < 16:
+        return "Eisprung"
+    elif 16 <= tage_seit_start < länge:
+        return "Lutealphase"
+    return "Unbekannt"
 
-if essen:
-    werte, zutaten = analysiere_naehrstoffe(essen)
-    st.subheader("Erkannte Zutaten:")
-    st.write(", ".join(zutaten) if zutaten else "Keine passenden Lebensmittel erkannt.")
-    
-    st.subheader("Geschätzte Nährstoffzufuhr (gesamt):")
-    referenz = {
-        "Eisen_mg": 15,
-        "Magnesium_mg": 300,
-        "Kalzium_mg": 1000,
-        "Zink_mg": 8,
-        "Protein_g": 50
-    }
+if os.path.exists(DATA_FILE):
+    df = pd.read_csv(DATA_FILE, parse_dates=["Datum"])
+else:
+    df = pd.DataFrame(columns=["Datum", "Essen geplant", "Essen gegessen", "Sport geplant", "Sport gemacht"] + st.session_state.vitamine)
 
-    for n, val in werte.items():
-        ziel = referenz[n]
-        prozent = round(val / ziel * 100)
-        if prozent >= 100:
-            status = "ausreichend"
-        elif prozent >= 70:
-            status = "ok"
-        else:
-            status = "zu wenig"
-        st.write(f"{n.replace('_mg','').replace('_g','').capitalize()}: {val:.1f} ({prozent}% des Bedarfs) → {status}")
+st.sidebar.header("Zyklus-Einstellungen")
+zyklus_start = st.sidebar.date_input("Erster Tag der letzten Periode", st.session_state.zyklus_start)
+zyklus_länge = st.sidebar.number_input("Zykluslänge (Tage)", 20, 40, st.session_state.zyklus_länge)
+st.session_state.zyklus_start = zyklus_start
+st.session_state.zyklus_länge = zyklus_länge
+
+heute = datetime.date.today()
+woche = [heute + datetime.timedelta(days=i) for i in range(7)]
+
+st.header("Wochenübersicht")
+
+for tag in woche:
+    tag_str = str(tag)
+    eintrag = df[df["Datum"] == pd.to_datetime(tag_str)]
+    if not eintrag.empty:
+        eintrag = eintrag.iloc[0]
+    else:
+        eintrag = {}
+
+    with st.expander(f"{tag.strftime('%A, %d.%m.%Y')} – {get_zyklusphase(tag, zyklus_start, zyklus_länge)}"):
+        essen_geplant = st.text_area("Essen geplant", eintrag.get("Essen geplant", ""), key=f"essen_geplant_{tag}")
+        essen_ist = st.text_area("Essen gegessen", eintrag.get("Essen gegessen", ""), key=f"essen_ist_{tag}")
+        sport_geplant = st.text_input("Sport geplant", eintrag.get("Sport geplant", ""), key=f"sport_geplant_{tag}")
+        sport_ist = st.text_input("Sport gemacht", eintrag.get("Sport gemacht", ""), key=f"sport_ist_{tag}")
+
+        vitamin_daten = {}
+        for i, v in enumerate(st.session_state.vitamine):
+            checkbox_key = f"{v}_{tag}_{i}"
+            vitamin_daten[v] = st.checkbox(f"{v} genommen ({tag})", value=eintrag.get(v, "") == "ja", key=checkbox_key)
+
+        if st.button(f"Speichern für {tag}", key=f"save_{tag}"):
+            new_row = {
+                "Datum": pd.to_datetime(tag_str),
+                "Essen geplant": essen_geplant,
+                "Essen gegessen": essen_ist,
+                "Sport geplant": sport_geplant,
+                "Sport gemacht": sport_ist,
+            }
+            for v in st.session_state.vitamine:
+                new_row[v] = "ja" if vitamin_daten[v] else "nein"
+
+            df = df[df["Datum"] != pd.to_datetime(tag_str)]
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            df.to_csv(DATA_FILE, index=False)
+            st.success(f"Eintrag für {tag.strftime('%d.%m.%Y')} gespeichert.")
+
+st.sidebar.header("Vitaminliste bearbeiten")
+neues_vitamin = st.sidebar.text_input("Neues Vitamin hinzufügen")
+if st.sidebar.button("Hinzufügen") and neues_vitamin:
+    if neues_vitamin not in st.session_state.vitamine:
+        st.session_state.vitamine.append(neues_vitamin)
+        st.experimental_rerun()
+
+if st.sidebar.button("App zurücksetzen (nur Session)"):
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.experimental_rerun()
