@@ -1,23 +1,11 @@
-Lebensmittel,Eisen (mg),Magnesium (mg),Kalzium (mg),Protein (g),Vitamin B12 (µg),Jod (µg)
-Haferflocken,4.6,134,54,13.5,0.0,20
-Linsen gekocht,3.3,36,19,9,0.0,3
-Tofu,5.4,30,350,15,0.0,15
-Brokkoli gekocht,1.1,21,62,3,0.0,15
-Mandeln,4.1,270,264,21,0.0,2
-Kichererbsen gekocht,2.9,48,49,8.9,0.0,3
-Spinat gekocht,3.6,87,136,2.9,0.0,3
-Chiasamen,7.7,335,631,17,0.0,5
-Pflanzenmilch (angereichert),0.4,15,240,3,1.0,30
-Vollkornbrot,2.5,60,54,8,0.0,2
-Quinoa gekocht,2.8,64,31,8.1,0.0,2
-Tempeh,2.7,81,111,19,0.1,3
-Süßkartoffel gekocht,0.6,25,30,1.6,0.0,2
-Grünkohl gekocht,1.5,34,150,2.5,0.0,3
-Sonnenblumenkerne,5.0,325,78,21,0.0,5
-Kürbiskerne,8.8,262,46,24,0.0,5
-Seitan,1.5,40,20,21,0.0,5
-Sojajoghurt (angereichert),0.6,25,150,4,2.0,30
-Amaranth gekocht,2.1,65,116,9.3,0.0,3
-Buchweizen gekocht,1.3,86,7,5,0.0,2
-Nori-Algen getrocknet,2.0,232,70,6,0.3,230
-Jodsalz,0.0,0,0,0,0.0,200
+Lebensmittel,Eisen_mg,Magnesium_mg,Kalzium_mg,Zink_mg,Protein_g
+Haferflocken,4.6,140,54,3.9,13
+Linsen,3.3,47,19,3.3,9
+Brokkoli,1.3,21,47,0.4,3
+Spinat,2.7,80,99,0.5,3
+Tofu,5.4,58,350,1.0,10
+Mandeln,3.7,270,250,3.1,21
+Chiasamen,7.7,335,630,4.6,17
+Kichererbsen,6.2,48,49,2.5,9
+Süßkartoffel,0.6,25,30,0.3,1.6
+Vollkornreis,1.5,110,10,1.2,7.5
